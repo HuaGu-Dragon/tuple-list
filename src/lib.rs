@@ -1,13 +1,36 @@
+pub trait TupleList {
+    const LEN: usize;
+
+    fn is_empty(&self) -> bool {
+        Self::LEN == 0
+    }
+
+    fn len(&self) -> usize {
+        Self::LEN
+    }
+}
+
 pub trait Append<T> {
-    type Output;
+    type Output: TupleList;
 
     fn append(self, elem: T) -> Self::Output;
 }
 
 pub trait Extend<L> {
-    type Output;
+    type Output: TupleList;
 
     fn extend(self, list: L) -> Self::Output;
+}
+
+impl TupleList for () {
+    const LEN: usize = 0;
+}
+
+impl<Head, Tail> TupleList for (Head, Tail)
+where
+    Tail: TupleList,
+{
+    const LEN: usize = Tail::LEN + 1;
 }
 
 impl<T> Append<T> for () {
@@ -29,23 +52,25 @@ where
     }
 }
 
-impl<L> Extend<()> for L {
-    type Output = L;
+impl<T> Extend<T> for ()
+where
+    T: TupleList,
+{
+    type Output = T;
 
-    fn extend(self, _list: ()) -> Self::Output {
-        self
+    fn extend(self, list: T) -> Self::Output {
+        list
     }
 }
 
-impl<L, Head, Tail> Extend<(Head, Tail)> for L
+impl<T, Head, Tail> Extend<T> for (Head, Tail)
 where
-    L: Append<Head>,
-    L::Output: Extend<Tail>,
+    Tail: Extend<T>,
 {
-    type Output = <L::Output as Extend<Tail>>::Output;
+    type Output = (Head, Tail::Output);
 
-    fn extend(self, list: (Head, Tail)) -> Self::Output {
-        self.append(list.0).extend(list.1)
+    fn extend(self, list: T) -> Self::Output {
+        (self.0, self.1.extend(list))
     }
 }
 
@@ -72,5 +97,17 @@ mod tests {
         let list = second.extend(first);
 
         assert_eq!(list, (42, (42., (42, ()))));
+    }
+
+    #[test]
+    fn test_len() {
+        let head = ();
+
+        let first = head.append(42);
+        let second = first.append(42.);
+
+        assert_eq!(head.len(), 0);
+        assert_eq!(first.len(), 1);
+        assert_eq!(second.len(), 2);
     }
 }
