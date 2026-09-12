@@ -75,6 +75,19 @@ where
     }
 }
 
+#[macro_export]
+macro_rules! tuple_list {
+    () => {
+        ()
+    };
+    ($head:expr) => {
+        ($head, ())
+    };
+    ($head:expr, $($trailing:expr), *) => {
+        ($head, tuple_list!($($trailing), *))
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -110,5 +123,17 @@ mod tests {
         assert_eq!(head.len(), 0);
         assert_eq!(first.len(), 1);
         assert_eq!(second.len(), 2);
+    }
+
+    #[test]
+    fn test_macro() {
+        let none = tuple_list!();
+
+        let one = tuple_list!(42);
+        let two = tuple_list!(42, "hello world");
+
+        assert_eq!(none.len(), 0);
+        assert_eq!(one.len(), 1);
+        assert_eq!(two.len(), 2);
     }
 }
