@@ -65,6 +65,7 @@ where
 
 impl<T, Head, Tail> Extend<T> for (Head, Tail)
 where
+    T: TupleList,
     Tail: Extend<T>,
 {
     type Output = (Head, Tail::Output);
