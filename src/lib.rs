@@ -16,7 +16,10 @@ pub trait Append<T> {
     fn append(self, elem: T) -> Self::Output;
 }
 
-pub trait Extend<L> {
+pub trait Extend<L>
+where
+    L: TupleList,
+{
     type Output: TupleList;
 
     fn extend(self, list: L) -> Self::Output;
@@ -80,10 +83,7 @@ macro_rules! tuple_list {
     () => {
         ()
     };
-    ($head:expr) => {
-        ($head, ())
-    };
-    ($head:expr, $($trailing:expr), *) => {
+    ($head:expr $(, $trailing:expr)*) => {
         ($head, tuple_list!($($trailing), *))
     };
 }
